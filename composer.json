@@ -1,0 +1,39 @@
+{
+  "name": "alnv/personal-data-extension-bundle",
+  "type": "contao-bundle",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Alexander Naumov",
+      "homepage": "https://alexandernaumov.de",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Alnv\\PersonalDataExtensionBundle\\": "src/"
+    },
+    "classmap": [
+      "src/Resources/contao/"
+    ],
+    "exclude-from-classmap": [
+      "src/Resources/contao/dca/",
+      "src/Resources/contao/config/"
+    ]
+  },
+  "require": {
+    "php":">=7.1",
+    "contao/core-bundle":"~4.4"
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "extra": {
+    "contao": {
+      "sources": {
+        "": "system/modules/contao-personal-data-extension-bundle"
+      }
+    },
+    "contao-manager-plugin": "Alnv\\PersonalDataExtensionBundle\\ContaoManager\\Plugin"
+  }
+}

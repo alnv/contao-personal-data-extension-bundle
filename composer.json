@@ -1,5 +1,6 @@
 {
   "name": "alnv/personal-data-extension-bundle",
+  "description": "This personal data module for Contao CMS supports onchange submits.",
   "type": "contao-bundle",
   "license": "proprietary",
   "authors": [
@@ -7,6 +8,11 @@
       "name": "Alexander Naumov",
       "homepage": "https://alexandernaumov.de",
       "role": "Developer"
+    },
+    {
+      "name": "Frank Schmidt",
+      "homepage": "https://www.fs-edv.com",
+      "role": "Support"
     }
   ],
   "autoload": {
@@ -18,7 +24,8 @@
     ],
     "exclude-from-classmap": [
       "src/Resources/contao/dca/",
-      "src/Resources/contao/config/"
+      "src/Resources/contao/config/",
+      "src/Resources/contao/languages/"
     ]
   },
   "require": {

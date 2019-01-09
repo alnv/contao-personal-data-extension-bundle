@@ -274,6 +274,15 @@ class ModulePersonalData extends \Module {
 
         if ( $blnModified ) {
 
+            if ( isset( $GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] ) && is_array($GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] ) ) {
+
+                foreach ( $GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] as $arrCallback ) {
+
+                    $this->import( $arrCallback[0] );
+                    $this->{$arrCallback[0]}->{$arrCallback[1]}( $this->User, $_SESSION['FORM_DATA'], $this );
+                }
+            }
+
             $objMember->tstamp = time();
             $objMember->save();
 
@@ -287,7 +296,7 @@ class ModulePersonalData extends \Module {
 
         if ( \Input::post('FORM_SUBMIT') == $strFormId && !$blnDoNotSubmit ) {
 
-            if ( isset( $GLOBALS['TL_HOOKS']['updatePersonalData']) && is_array($GLOBALS['TL_HOOKS']['updatePersonalData'] ) ) {
+            if ( isset( $GLOBALS['TL_HOOKS']['updatePersonalData'] ) && is_array($GLOBALS['TL_HOOKS']['updatePersonalData'] ) ) {
 
                 foreach ( $GLOBALS['TL_HOOKS']['updatePersonalData'] as $arrCallback ) {
 

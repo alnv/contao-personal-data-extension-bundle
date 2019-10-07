@@ -182,6 +182,11 @@ class ModulePersonalData extends \Module {
                 $objWidget->rowClassConfirm = 'row_' . ++$intRow . ((($intRow % 2) == 0) ? ' even' : ' odd');
             }
 
+            if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
+
+                $objWidget->value = explode( ',', $objWidget->value );
+            }
+
             if ( \Input::post('FORM_SUBMIT') == $strFormId ) {
 
                 $objWidget->validate();
@@ -200,6 +205,11 @@ class ModulePersonalData extends \Module {
 
                         $objWidget->addError( sprintf( $GLOBALS['TL_LANG']['ERR']['invalidDate'], $varValue ) );
                     }
+                }
+
+                if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
+
+                    $varValue = implode( ',', $varValue );
                 }
 
                 if ( $arrData['eval']['unique'] && $varValue != '' && !$this->Database->isUniqueValue( 'tl_member', $strField, $varValue, $this->User->id ) ) {
@@ -270,7 +280,7 @@ class ModulePersonalData extends \Module {
             $this->Template->fields .= $strTempField;
             $arrFields[ $strGroup ][ $strField ] .= $strTempField;
             ++$intRow;
-        }
+        };
 
         if ( $blnModified ) {
 

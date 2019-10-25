@@ -184,7 +184,10 @@ class ModulePersonalData extends \Module {
 
             if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
 
-                $objWidget->value = explode( ',', $objWidget->value );
+                if ( isset( $arrData['eval']['csv'] ) && $arrData['eval']['csv'] ) {
+
+                    $objWidget->value = explode( $arrData['eval']['csv'], $objWidget->value );
+                }
             }
 
             if ( \Input::post('FORM_SUBMIT') == $strFormId ) {
@@ -209,7 +212,10 @@ class ModulePersonalData extends \Module {
 
                 if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
 
-                    $varValue = implode( ',', $varValue );
+                    if ( isset( $arrData['eval']['csv'] ) && $arrData['eval']['csv'] ) {
+
+                        $varValue = implode( $arrData['eval']['csv'], $varValue );
+                    }
                 }
 
                 if ( $arrData['eval']['unique'] && $varValue != '' && !$this->Database->isUniqueValue( 'tl_member', $strField, $varValue, $this->User->id ) ) {
@@ -280,7 +286,7 @@ class ModulePersonalData extends \Module {
             $this->Template->fields .= $strTempField;
             $arrFields[ $strGroup ][ $strField ] .= $strTempField;
             ++$intRow;
-        };
+        }
 
         if ( $blnModified ) {
 

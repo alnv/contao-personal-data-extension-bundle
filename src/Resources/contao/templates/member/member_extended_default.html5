@@ -1,3 +1,6 @@
+<?php
+use Contao\System;
+?>
 <!-- indexer::stop -->
 <div class="<?= $this->class ?> block"<?= $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
 
@@ -12,7 +15,8 @@
   <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> id="<?= $this->formId ?>" method="post" enctype="<?= $this->enctype ?>">
     <div class="formbody">
         <input type="hidden" name="FORM_ONCHANGE" value="<?= $this->formId ?>">
-      <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}">
+        <input type="hidden" name="REQUEST_TOKEN"
+               value="<?= System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue() ?>">
       <div class="fields">
         <?= $this->fields ?>
       </div>

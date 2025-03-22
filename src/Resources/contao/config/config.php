@@ -1,9 +1,10 @@
 <?php
 
-array_insert( $GLOBALS['FE_MOD'], 3, [
+use Alnv\PersonalDataExtensionBundle\Modules\ModulePersonalData;
+use Contao\ArrayUtil;
 
+ArrayUtil::arrayInsert($GLOBALS['FE_MOD'], 3, [
     'user' => [
-
-        'personalDataExtension' => 'Alnv\PersonalDataExtensionBundle\Modules\ModulePersonalData'
+        'personalDataExtension' => ModulePersonalData::class
     ]
 ]);

@@ -1,32 +1,38 @@
+<?php
+
+use Contao\System;
+
+?>
 <!-- indexer::stop -->
 <div class="<?= $this->class ?> block"<?= $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>>
 
-  <?php if ($this->headline): ?>
+    <?php if ($this->headline): ?>
     <<?= $this->hl ?>><?= $this->headline ?></<?= $this->hl ?>>
-  <?php endif; ?>
+<?php endif; ?>
 
-  <?php if ($this->message): ?>
+<?php if ($this->message): ?>
     <p class="tl_confirm"><?= $this->message ?></p>
-  <?php endif; ?>
+<?php endif; ?>
 
-  <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> id="<?= $this->formId ?>" method="post" enctype="<?= $this->enctype ?>">
+<form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> id="<?= $this->formId ?>" method="post" enctype="<?= $this->enctype ?>">
     <div class="formbody">
-      <input type="hidden" name="FORM_ONCHANGE" value="<?= $this->formId ?>">
-      <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}">
-      <?php foreach ($this->categories as $legend=>$category): ?>
-        <?php if (!empty($category)): ?>
-          <fieldset>
-            <legend><?= $legend ?></legend>
-            <?= implode('', $category) ?>
-          </fieldset>
-        <?php endif; ?>
-      <?php endforeach; ?>
+        <input type="hidden" name="FORM_ONCHANGE" value="<?= $this->formId ?>">
+        <input type="hidden" name="REQUEST_TOKEN"
+               value="<?= System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue() ?>">
+        <?php foreach ($this->categories as $legend => $category): ?>
+            <?php if (!empty($category)): ?>
+                <fieldset>
+                    <legend><?= $legend ?></legend>
+                    <?= implode('', $category) ?>
+                </fieldset>
+            <?php endif; ?>
+        <?php endforeach; ?>
 
-      <div class="widget widget-submit">
-        <button type="submit" name="FORM_SUBMIT" value="<?= $this->formId ?>" class="submit"><?= $this->slabel ?></button>
-      </div>
+        <div class="widget widget-submit">
+            <button type="submit" name="FORM_SUBMIT" value="<?= $this->formId ?>"
+                    class="submit"><?= $this->slabel ?></button>
+        </div>
     </div>
-  </form>
-
+</form>
 </div>
 <!-- indexer::continue -->

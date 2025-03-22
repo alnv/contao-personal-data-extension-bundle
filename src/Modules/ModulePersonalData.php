@@ -2,18 +2,33 @@
 
 namespace Alnv\PersonalDataExtensionBundle\Modules;
 
+use Contao\BackendTemplate;
+use Contao\Date;
+use Contao\Environment;
+use Contao\FormPassword;
+use Contao\FrontendUser;
+use Contao\Input;
+use Contao\MemberModel;
+use Contao\Module;
+use Contao\PageModel;
+use Contao\StringUtil;
+use Contao\System;
+use Contao\UploadableWidgetInterface;
+use Contao\Versions;
+use Symfony\Component\HttpFoundation\Request;
 
-class ModulePersonalData extends \Module {
+class ModulePersonalData extends Module
+{
 
 
     protected $strTemplate = 'member_extended_default';
 
+    public function generate()
+    {
 
-    public function generate() {
+        if (System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest(System::getContainer()->get('request_stack')->getCurrentRequest() ?? Request::create(''))) {
 
-        if (TL_MODE == 'BE') {
-
-            $objTemplate = new \BackendTemplate('be_wildcard');
+            $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->wildcard = '### ' . $GLOBALS['TL_LANG']['FMD']['personalDataExtension'][0] . ' ###';
             $objTemplate->title = $this->headline;
             $objTemplate->id = $this->id;
@@ -23,15 +38,13 @@ class ModulePersonalData extends \Module {
             return $objTemplate->parse();
         }
 
-        $this->editable = \StringUtil::deserialize( $this->editable );
+        $this->editable = StringUtil::deserialize($this->editable);
 
-        if ( empty( $this->editable ) || !\is_array( $this->editable ) || !FE_USER_LOGGED_IN ) {
-
+        if (empty($this->editable) || !\is_array($this->editable) || !FrontendUser::getInstance()->id) {
             return '';
         }
 
-        if ( $this->memberExtendedTpl != '' ) {
-
+        if ($this->memberExtendedTpl != '') {
             $this->strTemplate = $this->memberExtendedTpl;
         }
 
@@ -39,7 +52,8 @@ class ModulePersonalData extends \Module {
     }
 
 
-    protected function compile() {
+    protected function compile()
+    {
 
         global $objPage;
 
@@ -47,16 +61,16 @@ class ModulePersonalData extends \Module {
 
         $GLOBALS['TL_LANGUAGE'] = $objPage->language;
 
-        \System::loadLanguageFile('tl_member');
+        System::loadLanguageFile('tl_member');
         $this->loadDataContainer('tl_member');
 
-        if ( is_array( $GLOBALS['TL_DCA']['tl_member']['config']['onload_callback'] ) ) {
+        if (is_array($GLOBALS['TL_DCA']['tl_member']['config']['onload_callback'])) {
 
-            foreach ($GLOBALS['TL_DCA']['tl_member']['config']['onload_callback'] as $arrCallback ) {
+            foreach ($GLOBALS['TL_DCA']['tl_member']['config']['onload_callback'] as $arrCallback) {
 
-                if ( is_array( $arrCallback )) {
+                if (is_array($arrCallback)) {
 
-                    $this->import( $arrCallback[0] );
+                    $this->import($arrCallback[0]);
                     $this->{$arrCallback[0]}->{$arrCallback[1]}();
 
                 } elseif (is_callable($arrCallback)) {
@@ -74,30 +88,29 @@ class ModulePersonalData extends \Module {
         $blnDoNotSubmit = false;
 
         $arrGroups = [
-
             'personal' => [],
-            'address'  => [],
-            'contact'  => [],
-            'login'    => [],
-            'profile'  => []
+            'address' => [],
+            'contact' => [],
+            'login' => [],
+            'profile' => []
         ];
 
         $blnModified = false;
-        $objMember = \MemberModel::findByPk($this->User->id);
+        $objMember = MemberModel::findByPk($this->User->id);
         $strTable = $objMember->getTable();
         $strFormId = 'tl_member_' . $this->id;
-        $objSession = \System::getContainer()->get('session');
+        $objSession = System::getContainer()->get('session');
         $objFlashBag = $objSession->getFlashBag();
 
-        $objVersions = new \Versions( $strTable, $objMember->id );
-        $objVersions->setUsername( $objMember->username );
+        $objVersions = new Versions($strTable, $objMember->id);
+        $objVersions->setUsername($objMember->username);
         $objVersions->setUserId(0);
         $objVersions->setEditUrl('contao/main.php?do=member&act=edit&id=%s&rt=1');
         $objVersions->initialize();
 
-        foreach ( $this->editable as $strField ) {
+        foreach ($this->editable as $strField) {
 
-            $arrData = &$GLOBALS['TL_DCA']['tl_member']['fields'][ $strField ];
+            $arrData = &$GLOBALS['TL_DCA']['tl_member']['fields'][$strField];
 
             if ($arrData['inputType'] == 'checkboxWizard') {
 
@@ -109,9 +122,9 @@ class ModulePersonalData extends \Module {
                 $arrData['inputType'] = 'upload';
             }
 
-            $strClass = $GLOBALS['TL_FFL'][ $arrData['inputType'] ];
+            $strClass = $GLOBALS['TL_FFL'][$arrData['inputType']];
 
-            if ( !$arrData['eval']['feEditable'] || !class_exists( $strClass ) ) {
+            if (!$arrData['eval']['feEditable'] || !class_exists($strClass)) {
 
                 continue;
             }
@@ -119,19 +132,17 @@ class ModulePersonalData extends \Module {
             $strGroup = $arrData['eval']['feGroup'];
             $arrData['eval']['required'] = false;
 
-            if ( $arrData['eval']['mandatory'] ) {
+            if ($arrData['eval']['mandatory']) {
 
-                if ( is_array( $this->User->$strField ) ) {
+                if (is_array($this->User->$strField)) {
 
-                    if ( empty( $this->User->$strField ) ) {
+                    if (empty($this->User->$strField)) {
 
                         $arrData['eval']['required'] = true;
                     }
-                }
+                } else {
 
-                else {
-
-                    if ( !strlen($this->User->$strField ) ) {
+                    if (!strlen($this->User->$strField)) {
 
                         $arrData['eval']['required'] = true;
                     }
@@ -140,39 +151,39 @@ class ModulePersonalData extends \Module {
 
             $varValue = $this->User->$strField;
 
-            if ( \Input::post('FORM_ONCHANGE') == $strFormId ) {
+            if (Input::post('FORM_ONCHANGE') == $strFormId) {
 
-                $varValue = \Input::post( $strField );
+                $varValue = Input::post($strField);
             }
 
-            if ( isset( $arrData['load_callback'] ) && is_array( $arrData['load_callback'] ) ) {
+            if (isset($arrData['load_callback']) && is_array($arrData['load_callback'])) {
 
-                foreach ( $arrData['load_callback'] as $arrCallback ) {
+                foreach ($arrData['load_callback'] as $arrCallback) {
 
-                    if ( is_array( $arrCallback ) ) {
+                    if (is_array($arrCallback)) {
 
-                        $this->import( $arrCallback[0] );
-                        $varValue = $this->{$arrCallback[0]}->{$arrCallback[1]}( $varValue, $this->User, $this );
+                        $this->import($arrCallback[0]);
+                        $varValue = $this->{$arrCallback[0]}->{$arrCallback[1]}($varValue, $this->User, $this);
 
-                    } elseif ( is_callable( $arrCallback ) ) {
+                    } elseif (is_callable($arrCallback)) {
 
-                        $varValue = $arrCallback( $varValue, $this->User, $this );
+                        $varValue = $arrCallback($varValue, $this->User, $this);
                     }
                 }
             }
 
-            $objWidget = new $strClass( $strClass::getAttributesFromDca( $arrData, $strField, $varValue, $strField, $strTable, $this ) );
+            $objWidget = new $strClass($strClass::getAttributesFromDca($arrData, $strField, $varValue, $strField, $strTable, $this));
 
             $objWidget->id .= '_' . $this->id;
             $objWidget->storeValues = true;
             $objWidget->rowClass = 'row_' . $intRow . (($intRow == 0) ? ' row_first' : '') . ((($intRow % 2) == 0) ? ' even' : ' odd');
 
-            if ( $arrData['eval']['submitOnChange'] ) {
+            if ($arrData['eval']['submitOnChange']) {
 
-                $objWidget->addAttributes( [ 'onchange' => 'this.form.submit()' ] );
+                $objWidget->addAttributes(['onchange' => 'this.form.submit()']);
             }
 
-            if ( $objWidget instanceof \FormPassword ) {
+            if ($objWidget instanceof FormPassword) {
 
                 if ($objMember->password != '') {
 
@@ -182,92 +193,80 @@ class ModulePersonalData extends \Module {
                 $objWidget->rowClassConfirm = 'row_' . ++$intRow . ((($intRow % 2) == 0) ? ' even' : ' odd');
             }
 
-            if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
+            if ($objWidget->multiple && in_array($objWidget->type, ['checkbox', 'select']) && $varValue != null) {
 
-                if ( isset( $arrData['eval']['csv'] ) && $arrData['eval']['csv'] ) {
+                if (isset($arrData['eval']['csv']) && $arrData['eval']['csv']) {
 
-                    $objWidget->value = explode( $arrData['eval']['csv'], $objWidget->value );
+                    $objWidget->value = explode($arrData['eval']['csv'], $objWidget->value);
                 }
             }
 
-            if ( \Input::post('FORM_SUBMIT') == $strFormId ) {
+            if (Input::post('FORM_SUBMIT') == $strFormId) {
 
                 $objWidget->validate();
                 $varValue = $objWidget->value;
                 $strRgxp = $arrData['eval']['rgxp'];
 
-                if ( $varValue != '' && \in_array( $strRgxp, array('date', 'time', 'datim') ) ) {
+                if ($varValue != '' && \in_array($strRgxp, array('date', 'time', 'datim'))) {
 
                     try {
 
-                        $objDate = new \Date( $varValue, \Date::getFormatFromRgxp( $strRgxp ) );
+                        $objDate = new Date($varValue, Date::getFormatFromRgxp($strRgxp));
                         $varValue = $objDate->tstamp;
-                    }
+                    } catch (\OutOfBoundsException $e) {
 
-                    catch ( \OutOfBoundsException $e ) {
-
-                        $objWidget->addError( sprintf( $GLOBALS['TL_LANG']['ERR']['invalidDate'], $varValue ) );
+                        $objWidget->addError(sprintf($GLOBALS['TL_LANG']['ERR']['invalidDate'], $varValue));
                     }
                 }
 
-                if ( $objWidget->multiple && in_array( $objWidget->type, [ 'checkbox', 'select' ] ) && $varValue != null ) {
+                if ($objWidget->multiple && in_array($objWidget->type, ['checkbox', 'select']) && $varValue != null) {
 
-                    if ( isset( $arrData['eval']['csv'] ) && $arrData['eval']['csv'] ) {
+                    if (isset($arrData['eval']['csv']) && $arrData['eval']['csv']) {
 
-                        $varValue = implode( $arrData['eval']['csv'], $varValue );
+                        $varValue = implode($arrData['eval']['csv'], $varValue);
                     }
                 }
 
-                if ( $arrData['eval']['unique'] && $varValue != '' && !$this->Database->isUniqueValue( 'tl_member', $strField, $varValue, $this->User->id ) ) {
+                if ($arrData['eval']['unique'] && $varValue != '' && !$this->Database->isUniqueValue('tl_member', $strField, $varValue, $this->User->id)) {
 
-                    $objWidget->addError( sprintf( $GLOBALS['TL_LANG']['ERR']['unique'], $arrData['label'][0] ?: $strField ) );
+                    $objWidget->addError(sprintf($GLOBALS['TL_LANG']['ERR']['unique'], $arrData['label'][0] ?: $strField));
                 }
 
-                if ( $objWidget->submitInput() && !$objWidget->hasErrors() && is_array( $arrData['save_callback'] ) ) {
+                if ($objWidget->submitInput() && !$objWidget->hasErrors() && is_array($arrData['save_callback'])) {
 
-                    foreach ( $arrData['save_callback'] as $arrCallback ) {
+                    foreach ($arrData['save_callback'] as $arrCallback) {
 
                         try {
 
-                            if ( is_array( $arrCallback ) ) {
+                            if (is_array($arrCallback)) {
 
-                                $this->import( $arrCallback[0] );
-                                $varValue = $this->{$arrCallback[0]}->{$arrCallback[1]}( $varValue, $this->User, $this );
+                                $this->import($arrCallback[0]);
+                                $varValue = $this->{$arrCallback[0]}->{$arrCallback[1]}($varValue, $this->User, $this);
 
-                            } elseif ( is_callable( $arrCallback ) ) {
+                            } elseif (is_callable($arrCallback)) {
 
-                                $varValue = $arrCallback( $varValue, $this->User, $this );
+                                $varValue = $arrCallback($varValue, $this->User, $this);
                             }
-                        }
-
-                        catch (\Exception $e) {
-
+                        } catch (\Exception $e) {
                             $objWidget->class = 'error';
                             $objWidget->addError($e->getMessage());
                         }
                     }
                 }
 
-                if ( $objWidget->hasErrors() ) {
+                if ($objWidget->hasErrors()) {
 
                     $blnDoNotSubmit = true;
-                }
+                } elseif ($objWidget->submitInput()) {
 
-                elseif ( $objWidget->submitInput() ) {
+                    $_SESSION['FORM_DATA'][$strField] = $varValue;
 
-                    $_SESSION['FORM_DATA'][ $strField ] = $varValue;
-
-                    if ( $varValue === '' ) {
+                    if ($varValue === '') {
 
                         $varValue = $objWidget->getEmptyValue();
                     }
 
-                    if ($arrData['eval']['encrypt']) {
-
-                        $varValue = \Encryption::encrypt($varValue);
-                    }
-
-                    if ( $varValue !== $this->User->$strField ) {
+                    if ($varValue !== $this->User->$strField) {
 
                         $this->User->$strField = $varValue;
 
@@ -277,32 +276,29 @@ class ModulePersonalData extends \Module {
                 }
             }
 
-            if ($objWidget instanceof \uploadable) {
-
+            if ($objWidget instanceof UploadableWidgetInterface) {
                 $blnHasUpload = true;
             }
 
             $strTempField = $objWidget->parse();
             $this->Template->fields .= $strTempField;
-            $arrFields[ $strGroup ][ $strField ] .= $strTempField;
+            $arrFields[$strGroup][$strField] .= $strTempField;
             ++$intRow;
         }
 
-        if ( $blnModified ) {
+        if ($blnModified) {
 
-            if ( isset( $GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] ) && is_array($GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] ) ) {
-
-                foreach ( $GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] as $arrCallback ) {
-
-                    $this->import( $arrCallback[0] );
-                    $this->{$arrCallback[0]}->{$arrCallback[1]}( $this->User, $_SESSION['FORM_DATA'], $this );
+            if (isset($GLOBALS['TL_HOOKS']['beforeUpdatePersonalData']) && is_array($GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'])) {
+                foreach ($GLOBALS['TL_HOOKS']['beforeUpdatePersonalData'] as $arrCallback) {
+                    $this->import($arrCallback[0]);
+                    $this->{$arrCallback[0]}->{$arrCallback[1]}($this->User, $_SESSION['FORM_DATA'], $this);
                 }
             }
 
             $objMember->tstamp = time();
             $objMember->save();
 
-            if ( $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'] ) {
+            if ($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) {
 
                 $objVersions->create();
             }
@@ -310,39 +306,37 @@ class ModulePersonalData extends \Module {
 
         $this->Template->hasError = $blnDoNotSubmit;
 
-        if ( \Input::post('FORM_SUBMIT') == $strFormId && !$blnDoNotSubmit ) {
+        if (Input::post('FORM_SUBMIT') == $strFormId && !$blnDoNotSubmit) {
 
-            if ( isset( $GLOBALS['TL_HOOKS']['updatePersonalData'] ) && is_array($GLOBALS['TL_HOOKS']['updatePersonalData'] ) ) {
+            if (isset($GLOBALS['TL_HOOKS']['updatePersonalData']) && is_array($GLOBALS['TL_HOOKS']['updatePersonalData'])) {
 
-                foreach ( $GLOBALS['TL_HOOKS']['updatePersonalData'] as $arrCallback ) {
+                foreach ($GLOBALS['TL_HOOKS']['updatePersonalData'] as $arrCallback) {
 
-                    $this->import( $arrCallback[0] );
-                    $this->{$arrCallback[0]}->{$arrCallback[1]}( $this->User, $_SESSION['FORM_DATA'], $this );
+                    $this->import($arrCallback[0]);
+                    $this->{$arrCallback[0]}->{$arrCallback[1]}($this->User, $_SESSION['FORM_DATA'], $this);
                 }
             }
 
-            if ( is_array( $GLOBALS['TL_DCA']['tl_member']['config']['onsubmit_callback'] ) ) {
+            if (is_array($GLOBALS['TL_DCA']['tl_member']['config']['onsubmit_callback'])) {
 
-                foreach ( $GLOBALS['TL_DCA']['tl_member']['config']['onsubmit_callback'] as $arrCallback ) {
+                foreach ($GLOBALS['TL_DCA']['tl_member']['config']['onsubmit_callback'] as $arrCallback) {
 
-                    if ( is_array( $arrCallback ) ) {
+                    if (is_array($arrCallback)) {
 
-                        $this->import( $arrCallback[0] );
-                        $this->{$arrCallback[0]}->{$arrCallback[1]}( $this->User, $this );
-                    }
-                    elseif ( is_callable( $arrCallback ) )
-                    {
-                        $arrCallback( $this->User, $this );
+                        $this->import($arrCallback[0]);
+                        $this->{$arrCallback[0]}->{$arrCallback[1]}($this->User, $this);
+                    } elseif (is_callable($arrCallback)) {
+                        $arrCallback($this->User, $this);
                     }
                 }
             }
 
-            if ( ( $objJumpTo = $this->objModel->getRelated('jumpTo') ) instanceof \PageModel ) {
+            if (($objJumpTo = $this->objModel->getRelated('jumpTo')) instanceof PageModel) {
 
-                $this->jumpToOrReload( $objJumpTo->row() );
+                $this->jumpToOrReload($objJumpTo->row());
             }
 
-            $objFlashBag->set( 'mod_personal_data_confirm', $GLOBALS['TL_LANG']['MSC']['savedData'] );
+            $objFlashBag->set('mod_personal_data_confirm', $GLOBALS['TL_LANG']['MSC']['savedData']);
             $this->reload();
         }
 
@@ -351,23 +345,23 @@ class ModulePersonalData extends \Module {
         $this->Template->addressDetails = $GLOBALS['TL_LANG']['tl_member']['addressDetails'];
         $this->Template->contactDetails = $GLOBALS['TL_LANG']['tl_member']['contactDetails'];
 
-        foreach ( $arrFields as $strKey => $strValue ) {
+        foreach ($arrFields as $strKey => $strValue) {
 
             $this->Template->$strKey = $strValue;
             $strFieldset = $strKey . (($strKey == 'personal') ? 'Data' : 'Details');
-            $arrGroups[ $GLOBALS['TL_LANG']['tl_member'][ $strFieldset ] ] = $strValue;
+            $arrGroups[$GLOBALS['TL_LANG']['tl_member'][$strFieldset]] = $strValue;
         }
 
-        if ( $objSession->isStarted() && $objSession->has( 'mod_personal_data_confirm' ) ) {
+        if ($objSession->isStarted() && $objSession->has('mod_personal_data_confirm')) {
 
-            $arrMessages = $objFlashBag->get( 'mod_personal_data_confirm' );
+            $arrMessages = $objFlashBag->get('mod_personal_data_confirm');
             $this->Template->message = $arrMessages[0];
         }
 
         $this->Template->categories = $arrGroups;
         $this->Template->formId = $strFormId;
-        $this->Template->slabel = \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['saveData']);
-        $this->Template->action = \Environment::get('indexFreeRequest');
+        $this->Template->slabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['saveData']);
+        $this->Template->action = Environment::get('indexFreeRequest');
         $this->Template->enctype = $blnHasUpload ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
         $this->Template->rowLast = 'row_' . $intRow . ((($intRow % 2) == 0) ? ' even' : ' odd');
     }

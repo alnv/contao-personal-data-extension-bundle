@@ -99,7 +99,11 @@ class ModulePersonalData extends Module
         $objMember = MemberModel::findByPk($this->User->id);
         $strTable = $objMember->getTable();
         $strFormId = 'tl_member_' . $this->id;
-        $objSession = System::getContainer()->get('session');
+
+        $requestStack = System::getContainer()->get('request_stack');
+        $request = $requestStack->getCurrentRequest();
+
+        $objSession = $request->getSession();
         $objFlashBag = $objSession->getFlashBag();
 
         $objVersions = new Versions($strTable, $objMember->id);
@@ -337,7 +341,6 @@ class ModulePersonalData extends Module
         }
 
         if ($objSession->isStarted() && $objSession->has('mod_personal_data_confirm')) {
-
             $arrMessages = $objFlashBag->get('mod_personal_data_confirm');
             $this->Template->message = $arrMessages[0];
         }

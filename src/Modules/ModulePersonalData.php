@@ -57,7 +57,7 @@ class ModulePersonalData extends Module
 
         global $objPage;
 
-        $this->import('FrontendUser', 'User');
+        $this->import(FrontendUser::class, 'User');
 
         $GLOBALS['TL_LANGUAGE'] = $objPage->language;
 
@@ -113,12 +113,10 @@ class ModulePersonalData extends Module
             $arrData = &$GLOBALS['TL_DCA']['tl_member']['fields'][$strField];
 
             if ($arrData['inputType'] == 'checkboxWizard') {
-
                 $arrData['inputType'] = 'checkbox';
             }
 
             if ($arrData['inputType'] == 'fileTree') {
-
                 $arrData['inputType'] = 'upload';
             }
 
@@ -152,21 +150,15 @@ class ModulePersonalData extends Module
             $varValue = $this->User->$strField;
 
             if (Input::post('FORM_ONCHANGE') == $strFormId) {
-
                 $varValue = Input::post($strField);
             }
 
             if (isset($arrData['load_callback']) && is_array($arrData['load_callback'])) {
-
                 foreach ($arrData['load_callback'] as $arrCallback) {
-
                     if (is_array($arrCallback)) {
-
                         $this->import($arrCallback[0]);
                         $varValue = $this->{$arrCallback[0]}->{$arrCallback[1]}($varValue, $this->User, $this);
-
                     } elseif (is_callable($arrCallback)) {
-
                         $varValue = $arrCallback($varValue, $this->User, $this);
                     }
                 }
@@ -184,9 +176,7 @@ class ModulePersonalData extends Module
             }
 
             if ($objWidget instanceof FormPassword) {
-
                 if ($objMember->password != '') {
-
                     $objWidget->mandatory = false;
                 }
 
@@ -194,9 +184,7 @@ class ModulePersonalData extends Module
             }
 
             if ($objWidget->multiple && in_array($objWidget->type, ['checkbox', 'select']) && $varValue != null) {
-
                 if (isset($arrData['eval']['csv']) && $arrData['eval']['csv']) {
-
                     $objWidget->value = explode($arrData['eval']['csv'], $objWidget->value);
                 }
             }
@@ -208,9 +196,7 @@ class ModulePersonalData extends Module
                 $strRgxp = $arrData['eval']['rgxp'];
 
                 if ($varValue != '' && \in_array($strRgxp, array('date', 'time', 'datim'))) {
-
                     try {
-
                         $objDate = new Date($varValue, Date::getFormatFromRgxp($strRgxp));
                         $varValue = $objDate->tstamp;
                     } catch (\OutOfBoundsException $e) {
@@ -220,9 +206,7 @@ class ModulePersonalData extends Module
                 }
 
                 if ($objWidget->multiple && in_array($objWidget->type, ['checkbox', 'select']) && $varValue != null) {
-
                     if (isset($arrData['eval']['csv']) && $arrData['eval']['csv']) {
-
                         $varValue = implode($arrData['eval']['csv'], $varValue);
                     }
                 }
